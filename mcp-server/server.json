@@ -1,0 +1,24 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "sayantan-claudemaster",
+  "title": "Claude Code Explorer MCP",
+  "description": "Explore the Claude Code CLI source — browse tools, commands, search code, and more.",
+  "repository": {
+    "url": "https://github.com/sayantanmandal/claude-code",
+    "source": "github",
+    "subfolder": "mcp-server"
+  },
+  "version": "1.0.0",
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "sayantan-claudemaster",
+      "version": "1.0.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "runtimeHint": "node"
+    }
+  ]
+}

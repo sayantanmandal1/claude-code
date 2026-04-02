@@ -1,0 +1,54 @@
+# ─────────────────────────────────────────────────────────────
+# Docker Compose overlay — Ollama local LLM support
+# ─────────────────────────────────────────────────────────────
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.ollama.yml up
+#
+# This adds an Ollama service with GPU passthrough (NVIDIA) and
+# configures the Claude Code web terminal to use it.
+# ─────────────────────────────────────────────────────────────
+
+services:
+  # Ollama server — serves local LLM models
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "${OLLAMA_PORT:-11434}:11434"
+    volumes:
+      # Persist downloaded models across restarts
+      - ollama-models:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0
+      - OLLAMA_NUM_GPU=${OLLAMA_NUM_GPU:-999}
+      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-5m}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Override claude-web to use Ollama
+  claude-web:
+    environment:
+      - CLAUDE_CODE_USE_OLLAMA=true
+      - OLLAMA_HOST=http://ollama:11434
+      - OLLAMA_CODING_MODEL=${OLLAMA_CODING_MODEL:-qwen2.5-coder:14b}
+      - OLLAMA_GENERAL_MODEL=${OLLAMA_GENERAL_MODEL:-qwen2.5:14b}
+      - OLLAMA_NUM_GPU=${OLLAMA_NUM_GPU:-999}
+      - OLLAMA_AUTO_PULL=${OLLAMA_AUTO_PULL:-true}
+      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-5m}
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+volumes:
+  ollama-models:
