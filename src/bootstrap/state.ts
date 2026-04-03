@@ -1758,3 +1758,8 @@ export function setPromptId(id: string | null): void {
 
 
 
+
+// Stub export for external builds (Anthropic-internal feature)
+export function isReplBridgeActive(): boolean {
+  return false
+}

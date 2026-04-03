@@ -94,6 +94,7 @@ const textFileLoaderPlugin: esbuild.Plugin = {
 
 // ── Plugin: handle missing optional files (feature-gated code) ──
 // Many imports are behind feature() checks and may not exist in external builds
+// Instead of stubbing, we mark them as external so they're loaded at runtime
 const optionalFilePlugin: esbuild.Plugin = {
   name: 'optional-file',
   setup(build) {
@@ -188,6 +189,15 @@ const optionalFilePlugin: esbuild.Plugin = {
       /self-hosted-runner/,
       /coordinator/,
       /cachedMicrocompact/,
+      /forkedAgent/,
+      /InProcessTeammateTask/,
+      /\/swarm\//,
+      /\/todo\//,
+      /\/vim\//,
+      /\/settings\//,
+      /directConnectManager/,
+      /createDirectConnectSession/,
+      /isReplBridgeActive/,
     ]
 
     build.onResolve({ filter: /\.(js|ts|tsx|md|txt)$/ }, (args) => {
@@ -199,20 +209,13 @@ const optionalFilePlugin: esbuild.Plugin = {
       // Check if this matches an optional pattern
       const isOptional = optionalPatterns.some(pattern => pattern.test(args.path))
       if (isOptional) {
+        // Mark as external so it's not bundled
         return {
           path: args.path,
-          namespace: 'optional-stub',
+          external: true,
         }
       }
       return undefined
-    })
-
-    build.onLoad({ filter: /.*/, namespace: 'optional-stub' }, () => {
-      // Return an empty module for optional imports
-      return {
-        contents: 'export default {}; export const __stub = true;',
-        loader: 'js',
-      }
     })
   },
 }
