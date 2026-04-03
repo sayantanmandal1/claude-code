@@ -92,6 +92,121 @@ const textFileLoaderPlugin: esbuild.Plugin = {
   },
 }
 
+// ── Plugin: handle missing optional files (feature-gated code) ──
+// Many imports are behind feature() checks and may not exist in external builds
+const optionalFilePlugin: esbuild.Plugin = {
+  name: 'optional-file',
+  setup(build) {
+    // List of path patterns that are optional (Anthropic-internal features)
+    const optionalPatterns = [
+      /\/proactive/,
+      /\/assistant/,
+      /snipCompact/,
+      /snipProjection/,
+      /contextCollapse/,
+      /skillSearch/,
+      /classifier/,
+      /attributionHooks/,
+      /attributionTrailer/,
+      /udsMessaging/,
+      /udsClient/,
+      /peerSessions/,
+      /sessionTranscript/,
+      /memoryShapeTelemetry/,
+      /TungstenTool/,
+      /dream\.js$/,
+      /hunter\.js$/,
+      /runSkillGenerator\.js$/,
+      /torch\.js$/,
+      /force-snip\.js$/,
+      /subscribe-pr\.js$/,
+      /remoteControlServer/,
+      /workflows/,
+      /peers/,
+      /fork/,
+      /buddy/,
+      /\/server\//,
+      /\/ssh\//,
+      /connectorText/,
+      /global\.d\.ts$/,
+      /\/types\.js$/,
+      /SnipBoundaryMessage/,
+      /UserGitHubWebhookMessage/,
+      /UserForkBoilerplateMessage/,
+      /UserCrossSessionMessage/,
+      /SnapshotUpdateDialog/,
+      /AssistantSessionChooser/,
+      /WorkflowDetailDialog/,
+      /MonitorMcpDetailDialog/,
+      /ReviewArtifact/,
+      /WorkflowPermissionRequest/,
+      /MonitorPermissionRequest/,
+      /MonitorTool/,
+      /WorkflowTool/,
+      /WebBrowserPanel/,
+      /TungstenLiveMonitor/,
+      /useProactive/,
+      /SendUserFileTool/,
+      /SnipTool/,
+      /SleepTool/,
+      /PushNotificationTool/,
+      /SubscribePRTool/,
+      /VerifyPlanExecutionTool/,
+      /OverflowTestTool/,
+      /CtxInspectTool/,
+      /TerminalCaptureTool/,
+      /WebBrowserTool/,
+      /ListPeersTool/,
+      /LocalWorkflowTask/,
+      /MonitorMcpTask/,
+      /reactiveCompact/,
+      /\/claude-api\//,
+      /\/verify\//,
+      /ultraplan\/prompt\.txt$/,
+      /systemThemeWatcher/,
+      /cachedMCConfig/,
+      /DiscoverSkillsTool/,
+      /\/sdk\//,
+      /mcpSkills/,
+      /skillsIndex/,
+      /skillsLoader/,
+      /skillsRegistry/,
+      /skillsTypes/,
+      /skillsUtils/,
+      /skillsValidation/,
+      /skillsWorker/,
+      /skillsWorkflow/,
+      /skillsWorkspace/,
+      /skillsZod/,
+    ]
+
+    build.onResolve({ filter: /\.(js|ts|tsx|md|txt)$/ }, (args) => {
+      // Skip if it's an external package
+      if (!args.path.startsWith('.') && !args.path.startsWith('/') && !args.path.startsWith('src/')) {
+        return undefined
+      }
+
+      // Check if this matches an optional pattern
+      const isOptional = optionalPatterns.some(pattern => pattern.test(args.path))
+      if (isOptional) {
+        return {
+          path: args.path,
+          namespace: 'optional-stub',
+        }
+      }
+      return undefined
+    })
+
+    build.onLoad({ filter: /.*/, namespace: 'optional-stub' }, () => {
+      // Return an empty module for optional imports
+      return {
+        contents: 'export default {}; export const __stub = true;',
+        loader: 'js',
+      }
+    })
+  },
+}
+
 const buildOptions: esbuild.BuildOptions = {
   entryPoints: [resolve(ROOT, 'src/entrypoints/cli.tsx')],
   bundle: true,
@@ -104,7 +219,7 @@ const buildOptions: esbuild.BuildOptions = {
   // Single-file output — no code splitting for CLI tools
   splitting: false,
 
-  plugins: [srcResolverPlugin, textFileLoaderPlugin],
+  plugins: [optionalFilePlugin, srcResolverPlugin, textFileLoaderPlugin],
 
   // Use tsconfig for baseUrl / paths resolution (complements plugin above)
   tsconfig: resolve(ROOT, 'tsconfig.json'),
