@@ -25,40 +25,69 @@ const noSourcemap = process.argv.includes('--no-sourcemap')
 const pkg = JSON.parse(readFileSync(resolve(ROOT, 'package.json'), 'utf-8'))
 const version = pkg.version || '0.0.0-dev'
 
-// ── Plugin: resolve bare 'src/' imports (tsconfig baseUrl: ".") ──
-// The codebase uses `import ... from 'src/foo/bar.js'` which relies on
-// TypeScript's baseUrl resolution. This plugin maps those to real TS files.
+// ── Plugin: resolve .js imports to .ts files ──
+// The codebase uses `import ... from './foo.js'` but the actual files are .ts/.tsx
+// This plugin resolves those imports to the correct TypeScript files.
 const srcResolverPlugin: esbuild.Plugin = {
   name: 'src-resolver',
   setup(build) {
+    // Handle bare 'src/' imports (tsconfig baseUrl: ".")
     build.onResolve({ filter: /^src\// }, (args) => {
       const basePath = resolve(ROOT, args.path)
+      return resolveToTsFile(basePath)
+    })
 
-      // Already exists as-is
-      if (existsSync(basePath)) {
-        return { path: basePath }
+    // Handle relative .js/.jsx imports
+    build.onResolve({ filter: /\.(js|jsx)$/ }, (args) => {
+      // Skip external packages
+      if (!args.path.startsWith('.') && !args.path.startsWith('/')) {
+        return undefined
       }
 
-      // Strip .js/.jsx and try TypeScript extensions
-      const withoutExt = basePath.replace(/\.(js|jsx)$/, '')
-      for (const ext of ['.ts', '.tsx', '.js', '.jsx']) {
-        const candidate = withoutExt + ext
-        if (existsSync(candidate)) {
-          return { path: candidate }
-        }
-      }
+      const basePath = resolve(args.resolveDir, args.path)
+      return resolveToTsFile(basePath)
+    })
+  },
+}
 
-      // Try as directory with index file
-      const dirPath = basePath.replace(/\.(js|jsx)$/, '')
-      for (const ext of ['.ts', '.tsx', '.js', '.jsx']) {
-        const candidate = resolve(dirPath, 'index' + ext)
-        if (existsSync(candidate)) {
-          return { path: candidate }
-        }
-      }
+function resolveToTsFile(basePath: string): esbuild.OnResolveResult | undefined {
+  // Already exists as-is
+  if (existsSync(basePath)) {
+    return { path: basePath }
+  }
 
-      // Let esbuild handle it (will error if truly missing)
-      return undefined
+  // Strip .js/.jsx and try TypeScript extensions
+  const withoutExt = basePath.replace(/\.(js|jsx)$/, '')
+  for (const ext of ['.ts', '.tsx', '.js', '.jsx']) {
+    const candidate = withoutExt + ext
+    if (existsSync(candidate)) {
+      return { path: candidate }
+    }
+  }
+
+  // Try as directory with index file
+  const dirPath = basePath.replace(/\.(js|jsx)$/, '')
+  for (const ext of ['.ts', '.tsx', '.js', '.jsx']) {
+    const candidate = resolve(dirPath, 'index' + ext)
+    if (existsSync(candidate)) {
+      return { path: candidate }
+    }
+  }
+
+  // Let esbuild handle it (will error if truly missing)
+  return undefined
+}
+
+// ── Plugin: load .md and .txt files as strings ──
+const textFileLoaderPlugin: esbuild.Plugin = {
+  name: 'text-file-loader',
+  setup(build) {
+    build.onLoad({ filter: /\.(md|txt)$/ }, async (args) => {
+      const text = readFileSync(args.path, 'utf-8')
+      return {
+        contents: `export default ${JSON.stringify(text)}`,
+        loader: 'js',
+      }
     })
   },
 }
@@ -75,7 +104,7 @@ const buildOptions: esbuild.BuildOptions = {
   // Single-file output — no code splitting for CLI tools
   splitting: false,
 
-  plugins: [srcResolverPlugin],
+  plugins: [srcResolverPlugin, textFileLoaderPlugin],
 
   // Use tsconfig for baseUrl / paths resolution (complements plugin above)
   tsconfig: resolve(ROOT, 'tsconfig.json'),
