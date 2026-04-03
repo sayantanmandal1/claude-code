@@ -262,6 +262,10 @@ const buildOptions: esbuild.BuildOptions = {
     'https-proxy-agent',
     'indent-string',
     '@alcalzone/ansi-tokenize',
+    // VSCode language server packages
+    'vscode-jsonrpc',
+    'vscode-languageserver',
+    'vscode-languageserver-protocol',
     // OpenTelemetry exporters (optional)
     '@opentelemetry/exporter-metrics-otlp-grpc',
     '@opentelemetry/exporter-metrics-otlp-http',
