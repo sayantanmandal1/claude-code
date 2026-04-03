@@ -185,6 +185,9 @@ const optionalFilePlugin: esbuild.Plugin = {
       /taskSummary/,
       /vscode-jsonrpc/,
       /vscode-languageserver/,
+      /self-hosted-runner/,
+      /coordinator/,
+      /cachedMicrocompact/,
     ]
 
     build.onResolve({ filter: /\.(js|ts|tsx|md|txt)$/ }, (args) => {
@@ -262,6 +265,23 @@ const buildOptions: esbuild.BuildOptions = {
     'https-proxy-agent',
     'indent-string',
     '@alcalzone/ansi-tokenize',
+    // Optional cloud/platform SDKs
+    'env-paths',
+    'jsonc-parser',
+    'shell-quote',
+    'fflate',
+    '@aws-sdk/client-bedrock',
+    '@aws-sdk/client-bedrock-runtime',
+    '@aws-sdk/client-sts',
+    '@aws-sdk/credential-provider-node',
+    '@smithy/node-http-handler',
+    '@smithy/core',
+    '@anthropic-ai/bedrock-sdk',
+    '@anthropic-ai/foundry-sdk',
+    '@anthropic-ai/vertex-sdk',
+    '@anthropic-ai/mcpb',
+    '@azure/identity',
+    'google-auth-library',
     // VSCode language server packages
     'vscode-jsonrpc',
     'vscode-languageserver',
