@@ -178,6 +178,13 @@ const optionalFilePlugin: esbuild.Plugin = {
       /skillsWorkflow/,
       /skillsWorkspace/,
       /skillsZod/,
+      /\/daemon\//,
+      /\/bg\.js$/,
+      /templateJobs/,
+      /environment-runner/,
+      /taskSummary/,
+      /vscode-jsonrpc/,
+      /vscode-languageserver/,
     ]
 
     build.onResolve({ filter: /\.(js|ts|tsx|md|txt)$/ }, (args) => {
