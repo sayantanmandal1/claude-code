@@ -130,6 +130,7 @@ const buildOptions: esbuild.BuildOptions = {
     'image-processor-napi',
     'audio-capture-napi',
     'modifiers-napi',
+    'color-diff-napi',
     // Optional dependencies
     'bidi-js',
     'xss',
@@ -137,6 +138,7 @@ const buildOptions: esbuild.BuildOptions = {
     'asciichart',
     'turndown',
     'https-proxy-agent',
+    'indent-string',
     '@alcalzone/ansi-tokenize',
     // OpenTelemetry exporters (optional)
     '@opentelemetry/exporter-metrics-otlp-grpc',
