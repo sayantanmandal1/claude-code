@@ -1,6 +1,6 @@
 {
   "name": "@sayantanmandal/claude-code",
-  "version": "1.0.0",
+  "version": "1.0.24",
   "description": "Claude Code CLI — AI-powered development assistant by Sayantan",
   "license": "MIT",
   "private": true,
