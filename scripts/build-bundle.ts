@@ -83,6 +83,15 @@ const textFileLoaderPlugin: esbuild.Plugin = {
   name: 'text-file-loader',
   setup(build) {
     build.onLoad({ filter: /\.(md|txt)$/ }, async (args) => {
+      // Check if file exists
+      if (!existsSync(args.path)) {
+        // Return empty string for missing files
+        return {
+          contents: `export default ''`,
+          loader: 'js',
+        }
+      }
+      
       const text = readFileSync(args.path, 'utf-8')
       return {
         contents: `export default ${JSON.stringify(text)}`,
@@ -94,19 +103,45 @@ const textFileLoaderPlugin: esbuild.Plugin = {
 
 // ── Plugin: handle missing optional files (feature-gated code) ──
 // Many imports are behind feature() checks and may not exist in external builds
-// Instead of stubbing, we mark them as external so they're loaded at runtime
+// This plugin stubs them out so the build doesn't fail
 const optionalFilePlugin: esbuild.Plugin = {
   name: 'optional-file',
   setup(build) {
     // List of path patterns that are optional (Anthropic-internal features)
     const optionalPatterns = [
-      /\/proactive/,
-      /\/assistant/,
+      /\/ink\/devtools\.js$/,
+      /\/ink\/global\.d\.ts$/,
+      /\/commands\/proactive\.js$/,
+      /\/commands\/assistant\//,
+      /\/commands\/fork\//,
+      /\/commands\/force-snip\.js$/,
+      /\/commands\/workflows\//,
+      /\/commands\/subscribe-pr\.js$/,
+      /\/commands\/torch\.js$/,
+      /\/commands\/peers\//,
+      /\/commands\/buddy\//,
+      /\/jobs\/classifier\.js$/,
+      /\/skills\/bundled\/dream\.js$/,
+      /\/skills\/bundled\/hunter\.js$/,
+      /\/skills\/bundled\/runSkillGenerator\.js$/,
+      /\/skills\/bundled\/verify\//,
+      /\/skills\/bundled\/claude-api\//,
+      /yolo-classifier-prompts\//,
+      /\/filePersistence\/types\.js$/,
+      /\/proactive\//,
+      /\/assistant\//,
+      /\/daemon\//,
+      /\/cli\/bg\.js$/,
+      /\/coordinator\//,
+      /\/sdk\//,
+      /\/server\//,
+      /\/ssh\//,
+      /\/utils\/ultraplan\/prompt\.txt$/,
       /snipCompact/,
       /snipProjection/,
       /contextCollapse/,
       /skillSearch/,
-      /classifier/,
+      /\/classifier\//,
       /attributionHooks/,
       /attributionTrailer/,
       /udsMessaging/,
@@ -115,22 +150,11 @@ const optionalFilePlugin: esbuild.Plugin = {
       /sessionTranscript/,
       /memoryShapeTelemetry/,
       /TungstenTool/,
-      /dream\.js$/,
-      /hunter\.js$/,
-      /runSkillGenerator\.js$/,
-      /torch\.js$/,
-      /force-snip\.js$/,
-      /subscribe-pr\.js$/,
       /remoteControlServer/,
-      /workflows/,
-      /peers/,
-      /fork/,
-      /buddy/,
-      /\/server\//,
-      /\/ssh\//,
+      /\/workflows\//,
+      /\/peers\//,
+      /\/buddy\//,
       /connectorText/,
-      /global\.d\.ts$/,
-      /\/types\.js$/,
       /SnipBoundaryMessage/,
       /UserGitHubWebhookMessage/,
       /UserForkBoilerplateMessage/,
@@ -149,7 +173,7 @@ const optionalFilePlugin: esbuild.Plugin = {
       /useProactive/,
       /SendUserFileTool/,
       /SnipTool/,
-      /SleepTool/,
+      /\/tools\/SleepTool\//,
       /PushNotificationTool/,
       /SubscribePRTool/,
       /VerifyPlanExecutionTool/,
@@ -163,11 +187,9 @@ const optionalFilePlugin: esbuild.Plugin = {
       /reactiveCompact/,
       /\/claude-api\//,
       /\/verify\//,
-      /ultraplan\/prompt\.txt$/,
       /systemThemeWatcher/,
       /cachedMCConfig/,
       /DiscoverSkillsTool/,
-      /\/sdk\//,
       /mcpSkills/,
       /skillsIndex/,
       /skillsLoader/,
@@ -179,43 +201,82 @@ const optionalFilePlugin: esbuild.Plugin = {
       /skillsWorkflow/,
       /skillsWorkspace/,
       /skillsZod/,
-      /\/daemon\//,
       /\/bg\.js$/,
       /templateJobs/,
       /environment-runner/,
       /taskSummary/,
-      /vscode-jsonrpc/,
-      /vscode-languageserver/,
       /self-hosted-runner/,
-      /coordinator/,
       /cachedMicrocompact/,
-      /forkedAgent/,
-      /InProcessTeammateTask/,
-      /\/swarm\//,
-      /\/todo\//,
+      /\/utils\/forkedAgent/,
+      /\/tasks\/InProcessTeammateTask\//,
+      /\/utils\/swarm\//,
+      /\/utils\/todo\//,
       /\/vim\//,
-      /\/settings\//,
+      /\/utils\/settings\/mdm\//,
       /directConnectManager/,
-      /createDirectConnectSession/,
-      /isReplBridgeActive/,
+      /\/bridge\/isReplBridgeActive/,
+      /\/handlers\/coordinatorHandler/,
+      /\/utils\/classifierApprovals/,
+      /coreTypes\.generated\.js$/,
     ]
 
-    build.onResolve({ filter: /\.(js|ts|tsx|md|txt)$/ }, (args) => {
-      // Skip if it's an external package
+    // High priority - run before other resolvers
+    build.onResolve({ filter: /.*/ }, (args) => {
+      // Skip if already in stub namespace
+      if (args.namespace === 'stub-ns') return undefined
+      
+      // Skip external packages
       if (!args.path.startsWith('.') && !args.path.startsWith('/') && !args.path.startsWith('src/')) {
         return undefined
       }
 
+      // Resolve the full path to check against patterns
+      const fullPath = args.path.startsWith('.') 
+        ? resolve(args.resolveDir, args.path)
+        : resolve(ROOT, args.path)
+
       // Check if this matches an optional pattern
-      const isOptional = optionalPatterns.some(pattern => pattern.test(args.path))
+      const isOptional = optionalPatterns.some(pattern => pattern.test(fullPath))
       if (isOptional) {
-        // Mark as external so it's not bundled
         return {
-          path: args.path,
-          external: true,
+          path: fullPath,
+          namespace: 'stub-ns',
         }
       }
+      
+      // Also stub if file doesn't exist and matches patterns
+      if (!existsSync(fullPath)) {
+        const isLikelyOptional = optionalPatterns.some(pattern => pattern.test(args.path))
+        if (isLikelyOptional) {
+          return {
+            path: fullPath,
+            namespace: 'stub-ns',
+          }
+        }
+      }
+      
+      // Let other plugins handle it
       return undefined
+    })
+
+    // Provide empty stubs for optional files
+    build.onLoad({ filter: /.*/, namespace: 'stub-ns' }, () => {
+      return {
+        contents: `
+          // Stub for optional/missing file
+          export default {};
+          // Export a Proxy that returns empty functions for any property access
+          const stub = new Proxy({}, {
+            get: () => () => {},
+            has: () => true
+          });
+          // Re-export everything from the stub
+          export * from 'data:text/javascript,export default new Proxy({}, { get: () => () => {}, has: () => true })';
+          // Named exports that might be imported
+          export const __stub = true;
+        `,
+        loader: 'js',
+      }
     })
   },
 }
@@ -232,7 +293,7 @@ const buildOptions: esbuild.BuildOptions = {
   // Single-file output — no code splitting for CLI tools
   splitting: false,
 
-  plugins: [optionalFilePlugin, srcResolverPlugin, textFileLoaderPlugin],
+  plugins: [srcResolverPlugin, textFileLoaderPlugin, optionalFilePlugin],
 
   // Use tsconfig for baseUrl / paths resolution (complements plugin above)
   tsconfig: resolve(ROOT, 'tsconfig.json'),
