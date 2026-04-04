@@ -47,15 +47,33 @@ export default {}
         './*': './*.js'
       }
     },
-    indexJs: `// Stub for @ant/computer-use-mcp
-export const API_RESIZE_PARAMS = {}
-export const targetImageSize = () => ({})
-export const bindSessionContext = () => {}
-export const DEFAULT_GRANT_FLAGS = []
-export default {}
+    indexJs: `// Stub for @ant/computer-use-mcp - exports everything as empty functions
+const handler = {
+  get: (target, prop) => {
+    if (prop === 'default') return {};
+    if (prop === Symbol.toStringTag) return 'Module';
+    if (prop === '__esModule') return true;
+    // Return empty function or empty object
+    return typeof prop === 'string' ? (() => {}) : undefined;
+  }
+};
+
+const stub = new Proxy({}, handler);
+
+// Export specific known exports
+export const API_RESIZE_PARAMS = {};
+export const targetImageSize = () => ({});
+export const bindSessionContext = () => {};
+export const DEFAULT_GRANT_FLAGS = [];
+export const buildComputerUseTools = () => [];
+export const COMPUTER_USE_TOOL_NAMES = [];
+export const ComputerUseTool = class {};
+export const createComputerUseMcpServer = () => ({});
+
+export default stub;
 `,
     extraFiles: {
-      'sentinelApps.js': '// Stub\nexport default []\n',
+      'sentinelApps.js': '// Stub\nexport const getSentinelCategory = () => null\nexport default []\n',
       'types.js': '// Stub\nexport const DEFAULT_GRANT_FLAGS = []\nexport default {}\n'
     }
   },
@@ -72,8 +90,9 @@ export default {}
       }
     },
     indexJs: `// Stub for @ant/claude-for-chrome-mcp
-export const BROWSER_TOOLS = []
-export default {}
+export const BROWSER_TOOLS = [];
+export const createClaudeForChromeMcpServer = () => ({});
+export default {};
 `
   }
 ]

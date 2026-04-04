@@ -390,9 +390,14 @@ const buildOptions: esbuild.BuildOptions = {
     'process.env.NODE_ENV': minify ? '"production"' : '"development"',
   },
 
-  // Banner: shebang for direct CLI execution
+  // Banner: shebang for direct CLI execution + require shim for dynamic imports
   banner: {
-    js: '#!/usr/bin/env node\n',
+    js: `#!/usr/bin/env node
+// Shim for dynamic require of Node.js built-ins
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+globalThis.require = require;
+`,
   },
 
   // Handle the .js → .ts resolution that the codebase uses
