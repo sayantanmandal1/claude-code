@@ -319,7 +319,6 @@ const buildOptions: esbuild.BuildOptions = {
     'image-processor-napi',
     'audio-capture-napi',
     'modifiers-napi',
-    'color-diff-napi',
     // Optional dependencies
     'bidi-js',
     'xss',
@@ -331,7 +330,6 @@ const buildOptions: esbuild.BuildOptions = {
     '@alcalzone/ansi-tokenize',
     // Optional cloud/platform SDKs
     'env-paths',
-    'jsonc-parser',
     'shell-quote',
     'fflate',
     '@aws-sdk/client-bedrock',
