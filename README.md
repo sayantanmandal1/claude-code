@@ -2,7 +2,7 @@
 
 # Claude Code
 
-**An AI-powered development assistant CLI — by Sayantan**
+**An AI-powered development assistant CLI**
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-512K%2B_lines-3178C6?logo=typescript&logoColor=white)](#tech-stack)
 [![Bun](https://img.shields.io/badge/Runtime-Bun-f472b6?logo=bun&logoColor=white)](#tech-stack)
