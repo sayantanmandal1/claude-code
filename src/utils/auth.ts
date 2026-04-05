@@ -113,6 +113,7 @@ export function isAnthropicAuthEnabled(): boolean {
   }
 
   const is3P =
+    isEnvTruthy(process.env.CLAUDE_CODE_USE_OLLAMA) ||
     isEnvTruthy(process.env.CLAUDE_CODE_USE_BEDROCK) ||
     isEnvTruthy(process.env.CLAUDE_CODE_USE_VERTEX) ||
     isEnvTruthy(process.env.CLAUDE_CODE_USE_FOUNDRY)
@@ -1590,8 +1591,9 @@ export function is1PApiCustomer(): boolean {
   // 3. AWS Bedrock users
   // 4. Foundry users
 
-  // Exclude Vertex, Bedrock, and Foundry customers
+  // Exclude Vertex, Bedrock, Foundry, and Ollama customers
   if (
+    isEnvTruthy(process.env.CLAUDE_CODE_USE_OLLAMA) ||
     isEnvTruthy(process.env.CLAUDE_CODE_USE_BEDROCK) ||
     isEnvTruthy(process.env.CLAUDE_CODE_USE_VERTEX) ||
     isEnvTruthy(process.env.CLAUDE_CODE_USE_FOUNDRY)
@@ -1728,9 +1730,10 @@ export function getSubscriptionName(): string {
   }
 }
 
-/** Check if using third-party services (Bedrock or Vertex or Foundry) */
+/** Check if using third-party services (Bedrock or Vertex or Foundry or Ollama) */
 export function isUsing3PServices(): boolean {
   return !!(
+    isEnvTruthy(process.env.CLAUDE_CODE_USE_OLLAMA) ||
     isEnvTruthy(process.env.CLAUDE_CODE_USE_BEDROCK) ||
     isEnvTruthy(process.env.CLAUDE_CODE_USE_VERTEX) ||
     isEnvTruthy(process.env.CLAUDE_CODE_USE_FOUNDRY)

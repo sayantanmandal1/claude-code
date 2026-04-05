@@ -98,6 +98,12 @@ export async function getAnthropicClient({
   fetchOverride?: ClientOptions['fetch']
   source?: string
 }): Promise<Anthropic> {
+  // Ollama (local LLM) — return early before any Anthropic auth setup
+  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_OLLAMA)) {
+    const { OllamaAnthropicClient } = await import('./ollama/ollamaClient.js')
+    return new OllamaAnthropicClient() as unknown as Anthropic
+  }
+
   const containerId = process.env.CLAUDE_CODE_CONTAINER_ID
   const remoteSessionId = process.env.CLAUDE_CODE_REMOTE_SESSION_ID
   const clientApp = process.env.CLAUDE_AGENT_SDK_CLIENT_APP
@@ -295,12 +301,6 @@ export async function getAnthropicClient({
     }
     // we have always been lying about the return type - this doesn't support batching or models
     return new AnthropicVertex(vertexArgs) as unknown as Anthropic
-  }
-
-  // Ollama (local LLM) provider
-  if (isEnvTruthy(process.env.CLAUDE_CODE_USE_OLLAMA)) {
-    const { OllamaAnthropicClient } = await import('./ollama/ollamaClient.js')
-    return new OllamaAnthropicClient() as unknown as Anthropic
   }
 
   // Determine authentication method based on available tokens
