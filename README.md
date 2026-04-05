@@ -9,7 +9,7 @@
 [![React + Ink](https://img.shields.io/badge/UI-React_%2B_Ink-61DAFB?logo=react&logoColor=black)](#tech-stack)
 [![Files](https://img.shields.io/badge/~1,900_files-source_only-grey)](#directory-structure)
 [![MCP Server](https://img.shields.io/badge/MCP-Explorer_Server-blueviolet)](#-explore-with-mcp-server)
-[![npm](https://img.shields.io/npm/v/sayantan-claudemaster?label=npm&color=cb3837&logo=npm)](https://www.npmjs.com/package/sayantan-claudemaster)
+[![npm](https://img.shields.io/npm/v/the-claudemaster?label=npm&color=cb3837&logo=npm)](https://www.npmjs.com/package/the-claudemaster)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 </div>
@@ -217,17 +217,17 @@ This repo ships an [MCP server](https://modelcontextprotocol.io/) that lets any 
 
 ### Install from npm
 
-The MCP server is published as [`sayantan-claudemaster`](https://www.npmjs.com/package/sayantan-claudemaster) on npm:
+The MCP server is published as [`the-claudemaster`](https://www.npmjs.com/package/the-claudemaster) on npm:
 
 ```bash
 # Claude Code
-claude mcp add sayantan-claudemaster -- npx -y sayantan-claudemaster
+claude mcp add the-claudemaster -- npx -y the-claudemaster
 ```
 
 ### One-liner setup (from source)
 
 ```bash
-git clone https://github.com/sayantanmandal/claude-code.git ~/claude-code \
+git clone https://github.com/sayantanmandal1/claude-code.git ~/claude-code \
   && cd ~/claude-code/mcp-server \
   && npm install && npm run build \
   && claude mcp add claude-code-explorer -- node ~/claude-code/mcp-server/dist/index.js
@@ -238,7 +238,7 @@ git clone https://github.com/sayantanmandal/claude-code.git ~/claude-code \
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/sayantanmandal/claude-code.git
+git clone https://github.com/sayantanmandal1/claude-code.git
 cd claude-code/mcp-server
 
 # 2. Install & build
